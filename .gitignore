@@ -139,6 +139,7 @@ logs
 
 # Generated PDFs (for assessment reports)
 generated-reports/
+Backend/reports/
 *.pdf
 
 # Temporary files
@@ -158,3 +159,15 @@ out/
 # Configuration files with sensitive data
 config/local.json
 config/production.json
+
+# Extra documentation files (keep only README.md)
+FINAL_VERIFICATION.md
+REVERT_STATUS.md
+PROJECT_SUMMARY.md
+STATUS.md
+ASSIGNMENT_COMPLETION_SUMMARY.md
+CONFIGURATION_GUIDE.md
+
+# Extra batch files (keep only essential ones)
+FINAL_TEST.bat
+test-full-functionality.bat

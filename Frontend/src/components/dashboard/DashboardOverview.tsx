@@ -1,406 +1,278 @@
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  Users, 
-  Activity, 
-  TrendingUp, 
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  BarChart3,
-  Settings,
-  ArrowUpRight,
-  Download,
-  Eye,
-  Calendar,
-  Zap,
-  Shield,
-  Database
-} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SimpleReportTest } from '@/components/SimpleReportTest';
+
+const API_BASE_URL = 'http://localhost:5000/api';
+
+interface DashboardStats {
+  status: string;
+  counts: {
+    assessments: number;
+    users: number;
+    reports: number;
+  };
+}
 
 export const DashboardOverview = () => {
-  const recentReports = [
-    {
-      id: 1,
-      patient: 'John Smith',
-      type: 'Health & Fitness Assessment',
-      sessionId: 'session_001',
-      date: '2 hours ago',
-      status: 'completed' as const,
-      score: 85,
-      avatar: 'JS'
-    },
-    {
-      id: 2,
-      patient: 'Emma Johnson',
-      type: 'Cardiac Assessment',
-      sessionId: 'session_002',
-      date: '5 hours ago',
-      status: 'completed' as const,
-      score: 72,
-      avatar: 'EJ'
-    },
-    {
-      id: 3,
-      patient: 'Michael Brown',
-      type: 'Health & Fitness Assessment',
-      sessionId: 'session_003',
-      date: '1 day ago',
-      status: 'pending' as const,
-      score: null,
-      avatar: 'MB'
-    },
-    {
-      id: 4,
-      patient: 'Sarah Wilson',
-      type: 'Cardiac Assessment',
-      sessionId: 'session_004',
-      date: '2 days ago',
-      status: 'failed' as const,
-      score: null,
-      avatar: 'SW'
-    }
-  ];
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'reports'>('overview');
 
-  const assessmentTypes = [
-    { name: 'Health & Fitness Assessment', count: 124, percentage: 68, color: 'bg-blue-500' },
-    { name: 'Cardiac Assessment', count: 58, percentage: 32, color: 'bg-emerald-500' }
-  ];
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
 
-  const getStatusIcon = (status: 'completed' | 'pending' | 'failed') => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-emerald-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-amber-500" />;
-      case 'failed':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`);
+      const data = await response.json();
+      setStats(data);
+    } catch (err) {
+      setError('Failed to load dashboard stats');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusColor = (status: 'completed' | 'pending' | 'failed') => {
-    switch (status) {
-      case 'completed':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'pending':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'failed':
-        return 'bg-red-50 text-red-700 border-red-200';
+  const testBackendConnection = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`);
+      const data = await response.json();
+      setStats(data);
+      alert('✅ Backend connection successful!');
+    } catch (err) {
+      setError('❌ Backend connection failed');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (activeTab === 'reports') {
+    return (
+      <div>
+        <div className="mb-6">
+          <div className="flex space-x-4">
+            <Button 
+              variant={activeTab === 'overview' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('overview')}
+            >
+              Dashboard Overview
+            </Button>
+            <Button 
+              variant={activeTab === 'reports' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('reports')}
+            >
+              Generate Reports
+            </Button>
+          </div>
+        </div>
+        <SimpleReportTest />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Welcome Header */}
-      <div className="relative bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-700 rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-16 translate-x-16 sm:-translate-y-32 sm:translate-x-32"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/5 rounded-full translate-y-12 -translate-x-12 sm:translate-y-24 sm:-translate-x-24"></div>
-        
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3">Welcome back! 👋</h1>
-            <p className="text-blue-100 text-base sm:text-lg mb-4 sm:mb-6 max-w-2xl">
-              Your assessment management platform is running smoothly. Here's what's happening today.
-            </p>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-blue-100">All Systems Operational</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-200" />
-                <span className="text-blue-100">Last updated: Just now</span>
-              </div>
-            </div>
-          </div>
-          <div className="hidden lg:block">
-            <div className="w-24 h-24 xl:w-32 xl:h-32 bg-white/10 rounded-2xl xl:rounded-3xl flex items-center justify-center backdrop-blur-sm">
-              <Activity className="h-12 w-12 xl:h-16 xl:w-16 text-white" />
-            </div>
-          </div>
+    <div>
+      <div className="mb-6">
+        <div className="flex space-x-4">
+          <Button 
+            variant={activeTab === 'overview' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('overview')}
+          >
+            Dashboard Overview
+          </Button>
+          <Button 
+            variant={activeTab === 'reports' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('reports')}
+          >
+            Generate Reports
+          </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Total Reports</p>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-900">1,247</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="h-3 w-3 text-emerald-500" />
-                  <span className="text-xs sm:text-sm text-emerald-600 font-medium">+12.3%</span>
-                  <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline">vs last month</span>
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 bg-indigo-50 rounded-xl sm:rounded-2xl group-hover:bg-indigo-100 transition-colors">
-                <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Active Sessions</p>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-900">38</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="h-3 w-3 text-emerald-500" />
-                  <span className="text-xs sm:text-sm text-emerald-600 font-medium">+5.2%</span>
-                  <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline">vs yesterday</span>
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 bg-emerald-50 rounded-xl sm:rounded-2xl group-hover:bg-emerald-100 transition-colors">
-                <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Registered Users</p>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-900">456</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="h-3 w-3 text-emerald-500" />
-                  <span className="text-xs sm:text-sm text-emerald-600 font-medium">+8.1%</span>
-                  <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline">vs last week</span>
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 bg-purple-50 rounded-xl sm:rounded-2xl group-hover:bg-purple-100 transition-colors">
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Success Rate</p>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-900">97.4%</p>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="h-3 w-3 text-emerald-500" />
-                  <span className="text-xs sm:text-sm text-emerald-600 font-medium">+0.8%</span>
-                  <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline">improvement</span>
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 bg-orange-50 rounded-xl sm:rounded-2xl group-hover:bg-orange-100 transition-colors">
-                <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Recent Reports */}
-        <Card className="lg:col-span-2 bg-white border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-3 text-slate-900">
-                  <div className="p-2 bg-indigo-50 rounded-xl">
-                    <Clock className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <span className="text-lg sm:text-xl">Recent Reports</span>
-                </CardTitle>
-                <CardDescription className="text-slate-600 mt-1 text-sm sm:text-base">
-                  Latest assessment reports and their status
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" className="rounded-xl self-start sm:self-auto">
-                <span className="text-sm">View All</span>
-                <ArrowUpRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Backend Status</CardTitle>
+            <div className={`h-3 w-3 rounded-full ${stats?.status === 'healthy' || stats?.status === 'OK' ? 'bg-green-500' : 'bg-red-500'}`}></div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 sm:space-y-4">
-              {recentReports.map((report) => (
-                <div key={report.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-100 hover:bg-slate-100 transition-all duration-200 group">
-                  <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold shadow-lg text-sm sm:text-base flex-shrink-0">
-                      {report.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-slate-900 mb-1 text-sm sm:text-base truncate">{report.patient}</h4>
-                      <p className="text-xs sm:text-sm text-slate-600 mb-2 truncate">{report.type}</p>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                        <Badge variant="outline" className="text-xs bg-white border-slate-300 rounded-lg px-2 py-1">
-                          {report.sessionId}
-                        </Badge>
-                        <span className="text-xs text-slate-500 flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {report.date}
-                        </span>
-                        {report.score && (
-                          <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
-                            Score: {report.score}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-3">
-                    <Badge className={`${getStatusColor(report.status)} px-3 py-2 rounded-xl border flex-shrink-0`}>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(report.status)}
-                        <span className="capitalize font-medium text-xs">{report.status}</span>
-                      </div>
-                    </Badge>
-                    
-                    <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="text-2xl font-bold">
+              {loading ? '...' : (stats?.status === 'healthy' || stats?.status === 'OK' ? 'Online' : 'Offline')}
             </div>
+            <p className="text-xs text-muted-foreground">
+              System status
+            </p>
           </CardContent>
         </Card>
 
-        {/* Assessment Types & Quick Actions */}
-        <div className="space-y-6">
-          <Card className="bg-white border-0 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-3 text-slate-900">
-                <div className="p-2 bg-emerald-50 rounded-xl">
-                  <BarChart3 className="h-5 w-5 text-emerald-600" />
-                </div>
-                <span className="text-lg sm:text-xl">Assessment Types</span>
-              </CardTitle>
-              <CardDescription className="text-slate-600 text-sm sm:text-base">
-                Distribution of assessment types
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6">
-              {assessmentTypes.map((type, index) => (
-                <div key={index} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-900 truncate pr-2">{type.name}</span>
-                    <span className="text-sm font-bold text-indigo-600 flex-shrink-0">{type.count}</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-slate-200 rounded-full h-2 sm:h-3 overflow-hidden">
-                        <div 
-                          className={`h-full ${type.color} rounded-full transition-all duration-500`}
-                          style={{ width: `${type.percentage}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium text-slate-600 flex-shrink-0">{type.percentage}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {/* Quick Actions */}
-              <div className="pt-4 sm:pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3 sm:mb-4">Quick Actions</h4>
-                <div className="space-y-2 sm:space-y-3">
-                  <Button className="w-full justify-start bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-0 rounded-xl p-3 sm:p-4 h-auto">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-100 rounded-lg">
-                        <FileText className="h-4 w-4 text-indigo-600" />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium text-sm sm:text-base">Generate New Report</div>
-                        <div className="text-xs text-indigo-600">Create assessment report</div>
-                      </div>
-                    </div>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start border-slate-200 hover:bg-slate-50 rounded-xl p-3 sm:p-4 h-auto">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg">
-                        <Settings className="h-4 w-4 text-slate-600" />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium text-slate-900 text-sm sm:text-base">Configure Assessment</div>
-                        <div className="text-xs text-slate-500">Manage settings</div>
-                      </div>
-                    </div>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : stats?.counts?.users || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Registered users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Assessments</CardTitle>
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : stats?.counts?.assessments || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Available assessments
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Reports Generated</CardTitle>
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? '...' : stats?.counts?.reports || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              PDF reports created
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* System Status */}
-      <Card className="bg-white border-0 shadow-lg">
-        <CardHeader className="pb-4 sm:pb-6">
-          <CardTitle className="flex items-center gap-3 text-slate-900">
-            <div className="p-2 bg-emerald-50 rounded-xl">
-              <Shield className="h-5 w-5 text-emerald-600" />
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>System Information</CardTitle>
+            <CardDescription>
+              Current system status and configuration
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Backend URL:</span>
+              <span className="text-sm text-gray-600">http://localhost:5000</span>
             </div>
-            <span className="text-lg sm:text-xl">System Health & Status</span>
-          </CardTitle>
-          <CardDescription className="text-slate-600 text-sm sm:text-base">
-            Current system health and configuration status
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Data Storage:</span>
+              <span className="text-sm text-gray-600">File-based (data.js)</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">PDF Engine:</span>
+              <span className="text-sm text-gray-600">Puppeteer + Chrome</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Configuration:</span>
+              <span className="text-sm text-gray-600">Dynamic (assessmentConfig.js)</span>
+            </div>
+            <Button onClick={testBackendConnection} className="w-full mt-4">
+              Test Backend Connection
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Assessment Types</CardTitle>
+            <CardDescription>
+              Configured assessment types for report generation
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="border rounded p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">Health & Fitness Assessment</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">as_hr_02</span>
+              </div>
+              <p className="text-sm text-gray-600">
+                6 sections: Key Body Vitals, Heart Health, Stress Level, Fitness Levels, Posture, Body Composition
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Session ID: session_001</p>
+            </div>
+
+            <div className="border rounded p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">Cardiac Assessment</span>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">as_card_01</span>
+              </div>
+              <p className="text-sm text-gray-600">
+                3 sections: Key Body Vitals, Cardiovascular Endurance, Body Composition
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Session ID: session_002</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>
+            Common tasks and system operations
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 bg-emerald-50 rounded-xl sm:rounded-2xl border border-emerald-100">
-              <div className="p-2 sm:p-3 bg-emerald-100 rounded-xl sm:rounded-2xl flex-shrink-0">
-                <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-emerald-800 mb-1 text-sm sm:text-base">API Endpoints</p>
-                <p className="text-xs sm:text-sm text-emerald-600 mb-1">All systems operational</p>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-xs text-emerald-600">99.9% uptime</span>
-                </div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button 
+              onClick={() => setActiveTab('reports')}
+              className="h-20 flex flex-col items-center justify-center"
+            >
+              <svg className="h-6 w-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Generate Report
+            </Button>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 bg-indigo-50 rounded-xl sm:rounded-2xl border border-indigo-100">
-              <div className="p-2 sm:p-3 bg-indigo-100 rounded-xl sm:rounded-2xl flex-shrink-0">
-                <Database className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-indigo-800 mb-1 text-sm sm:text-base">Configuration System</p>
-                <p className="text-xs sm:text-sm text-indigo-600 mb-1">Ready for new assessment types</p>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                  <span className="text-xs text-indigo-600">2 configs active</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 bg-purple-50 rounded-xl sm:rounded-2xl border border-purple-100 sm:col-span-2 lg:col-span-1">
-              <div className="p-2 sm:p-3 bg-purple-100 rounded-xl sm:rounded-2xl flex-shrink-0">
-                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-purple-800 mb-1 text-sm sm:text-base">PDF Generation</p>
-                <p className="text-xs sm:text-sm text-purple-600 mb-1">Puppeteer service active</p>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span className="text-xs text-purple-600">24 reports today</span>
-                </div>
-              </div>
-            </div>
+            <Button 
+              variant="outline"
+              onClick={testBackendConnection}
+              className="h-20 flex flex-col items-center justify-center"
+            >
+              <svg className="h-6 w-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Test Connection
+            </Button>
+
+            <Button 
+              variant="outline"
+              onClick={fetchDashboardStats}
+              className="h-20 flex flex-col items-center justify-center"
+            >
+              <svg className="h-6 w-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh Stats
+            </Button>
           </div>
         </CardContent>
       </Card>

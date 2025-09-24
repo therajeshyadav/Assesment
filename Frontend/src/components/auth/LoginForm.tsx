@@ -1,139 +1,115 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 interface LoginFormProps {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (credentials: { email: string; password: string }) => Promise<void>;
   onSwitchToSignup: () => void;
 }
 
-export const LoginForm = ({ onLogin, onSwitchToSignup }: LoginFormProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToSignup }) => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
+    setError('');
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onLogin(email, password);
-      toast({
-        title: "Login Successful",
-        description: "Welcome to AssessmentPro",
-      });
-    } catch (error) {
-      toast({
-        title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
+      await onLogin(formData);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Sign In</CardTitle>
+        <CardDescription>
+          Enter your credentials to access your account
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12 bg-background/50 border-border focus:ring-primary focus:border-primary"
               placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
               required
+              disabled={loading}
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 h-12 bg-background/50 border-border focus:ring-primary focus:border-primary"
+              name="password"
+              type="password"
               placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
               required
+              disabled={loading}
             />
+          </div>
+        </CardContent>
+        
+        <CardFooter className="flex flex-col space-y-4">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </Button>
+          
+          <div className="text-center text-sm">
+            <span className="text-gray-600">Don't have an account? </span>
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={onSwitchToSignup}
+              className="text-blue-600 hover:text-blue-500 font-medium"
+              disabled={loading}
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              Sign up
             </button>
           </div>
-        </div>
-      </div>
-
-      <Button 
-        type="submit" 
-        className="w-full h-12 bg-gradient-primary hover:opacity-90 text-white font-medium shadow-lg"
-        disabled={loading}
-      >
-        {loading ? (
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Signing in...
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            Sign In
-            <ArrowRight className="w-4 h-4" />
-          </div>
-        )}
-      </Button>
-
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={onSwitchToSignup}
-          className="text-sm text-primary hover:text-primary-hover transition-colors font-medium"
-        >
-          Forgot password?
-        </button>
-      </div>
-
-      <Separator className="my-6" />
-
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <button
-            type="button"
-            onClick={onSwitchToSignup}
-            className="text-primary hover:text-primary-hover transition-colors font-medium"
-          >
-            Create Account
-          </button>
-        </p>
-      </div>
-    </form>
+        </CardFooter>
+      </form>
+    </Card>
   );
 };
