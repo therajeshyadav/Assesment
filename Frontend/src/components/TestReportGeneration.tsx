@@ -39,7 +39,7 @@ export const TestReportGeneration = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/generate-report`, {
+      const response = await fetch(`http://localhost:5000/api/generate-report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export const TestReportGeneration = () => {
   const downloadReport = () => {
     if (result?.reportPath) {
       const link = document.createElement('a');
-      link.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${result.reportPath}`;
+      link.href = `http://localhost:5000${result.reportPath}`;
       link.download = result.fileName;
       link.target = '_blank';
       link.click();

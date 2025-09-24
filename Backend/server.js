@@ -6,13 +6,11 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import { assessmentData } from './data.js'; // Keep assessment data in-memory
+import { assessmentData, users } from './data.js';
 import { assessmentConfigs } from './config/assessmentConfig.js';
 import { DataExtractor } from './utils/dataExtractor.js';
 import { PDFGenerator } from './utils/pdfGenerator.js';
 import { SimplePDFGenerator } from './utils/simplePdfGenerator.js';
-import { connectDatabase } from './config/database.js';
-import { User } from './models/User.js';
 
 dotenv.config();
 
@@ -21,9 +19,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Initialize database connection
-connectDatabase();
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -74,11 +69,8 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Check if user already exists in MongoDB
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }] 
-    });
-    
+    // Check if user already exists
+    const existingUser = users.find(user => user.email === email || user.username === username);
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
@@ -86,18 +78,20 @@ app.post('/api/auth/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user in MongoDB
-    const newUser = new User({
+    // Create user
+    const newUser = {
+      id: Date.now().toString(),
       username,
       email,
-      password: hashedPassword
-    });
+      password: hashedPassword,
+      createdAt: new Date().toISOString()
+    };
 
-    await newUser.save();
+    users.push(newUser);
 
     // Generate token
     const token = generateToken({
-      id: newUser._id.toString(),
+      id: newUser.id,
       username: newUser.username,
       email: newUser.email
     });
@@ -106,16 +100,13 @@ app.post('/api/auth/register', async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
-        id: newUser._id.toString(),
+        id: newUser.id,
         username: newUser.username,
         email: newUser.email
       }
     });
   } catch (error) {
     console.error('Registration error:', error);
-    if (error.code === 11000) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -129,8 +120,8 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find user in MongoDB
-    const user = await User.findOne({ email });
+    // Find user
+    const user = users.find(u => u.email === email);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -142,12 +133,11 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    user.lastLogin = new Date().toISOString();
 
     // Generate token
     const token = generateToken({
-      id: user._id.toString(),
+      id: user.id,
       username: user.username,
       email: user.email
     });
@@ -156,7 +146,7 @@ app.post('/api/auth/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user._id.toString(),
+        id: user.id,
         username: user.username,
         email: user.email
       }
