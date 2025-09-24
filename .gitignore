@@ -171,3 +171,4 @@ CONFIGURATION_GUIDE.md
 # Extra batch files (keep only essential ones)
 FINAL_TEST.bat
 test-full-functionality.bat
+setup.sh
