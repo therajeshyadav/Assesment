@@ -21,6 +21,9 @@
     "mongoose": "^8.0.3",
     "dotenv": "^16.3.1"
   },
+  "puppeteer": {
+    "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+  },
   "devDependencies": {
     "nodemon": "^3.0.1"
   }
