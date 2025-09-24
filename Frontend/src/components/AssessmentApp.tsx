@@ -65,7 +65,7 @@ const DashboardWrapper = () => {
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/dashboard/stats', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

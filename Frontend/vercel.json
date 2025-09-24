@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "build": {
+    "env": {
+      "VITE_API_URL": "@vite_api_url",
+      "VITE_API_BASE_URL": "@vite_api_base_url"
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SimpleReportTest } from '@/components/SimpleReportTest';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 interface DashboardStats {
   status: string;
@@ -180,7 +180,7 @@ export const DashboardOverview = () => {
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <span className="text-sm font-medium">Backend URL:</span>
-              <span className="text-sm text-gray-600">http://localhost:5000</span>
+              <span className="text-sm text-gray-600">{import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Data Storage:</span>
