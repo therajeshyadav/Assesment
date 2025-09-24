@@ -41,6 +41,7 @@ npx @railway/cli deploy
 **Environment Variables in Railway:**
 - `JWT_SECRET`: Generate a secure random string
 - `NODE_ENV`: `production`
+- `MONGODB_URI`: Your MongoDB connection string (see Database Setup below)
 
 ### Option 2: Netlify + Render
 
@@ -64,6 +65,29 @@ npm run build
 - Build command: `npm install`
 - Start command: `npm start`
 
+## 🗄️ Database Setup (Required for User Authentication)
+
+### Option 1: MongoDB Atlas (Recommended - Free)
+1. Go to [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create free account and cluster
+3. Get connection string
+4. Add to environment variables as `MONGODB_URI`
+
+### Option 2: Railway MongoDB (if using Railway)
+1. Add MongoDB service in Railway
+2. Copy connection string from Railway dashboard
+3. Add as `MONGODB_URI` environment variable
+
+### Seed Test User (After Deployment)
+```bash
+# Run this once after deployment to create test user
+npm run seed:users
+```
+
+**Test User Credentials:**
+- Email: `test@example.com`
+- Password: `password`
+
 ## ⚙️ Manual Deployment Steps
 
 ### 1. Update Environment Variables
@@ -81,6 +105,7 @@ Set these in your hosting platform:
 JWT_SECRET=your-super-secure-jwt-secret-key-here
 NODE_ENV=production
 PORT=5000
+MONGODB_URI=your-mongodb-connection-string
 ```
 
 ### 3. Build Commands

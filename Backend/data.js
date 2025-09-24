@@ -460,14 +460,5 @@ export const assessmentData = [
   }
 ];
 
-// User data storage (in-memory for demo)
-export let users = [
-  // Test user for easy testing
-  {
-    id: "1",
-    username: "testuser",
-    email: "test@example.com",
-    password: "$2a$10$eJ.rLaNK3ovptoV/gQ2lt.6.wJeygzt37P0HevyC9U/3NNgKJEUM2", // password: "password"
-    createdAt: new Date().toISOString()
-  }
-];
+// Users are now stored in MongoDB
+// Assessment data remains in-memory for simplicity
